@@ -22,21 +22,20 @@
 
 <h2 align="center">Description [<a href="https://github.com/TheWisker/Yearly_Planner#index">↑</a>]</h2>
 
-<p align="center">A self-contained single-file web application for visually planning yearly ranges and events</p>
+<p align="center">Self-contained single-file web application for visually planning yearly ranges and events</p>
 
 <h2 align="center">Features [<a href="https://github.com/TheWisker/Yearly_Planner#index">↑</a>]</h2>
 
 The application features:
 
-- Single-file portability without external dependencies
-- Multi-year navigation and infinite planning
-- Template import and export via JSON
-- Self-replicating full app export to bundle your data
-- Visual measurement tool to calculate days and months
-- Custom color picking for each range
-- Paint and erase interaction modes
-- Visibility toggling for individual ranges
-- Local storage persistence to avoid data loss
+- Data import and export operations in JSON
+- Measurement tool to calculate days and months between two dates
+- Custom color and name for each range, apart for multi-range support
+- Single-file monolithic design without external dependencies for portability
+- Paint and erase interaction modes, with shift support for fast range selection
+- Self-replicating full app export with preloaded data to easily share your plannings
+- Visibility toggling for individual ranges, so its easy to visualize ranges separatedly
+- Instant local storage persistence to avoid data loss, so all changes get saved to the current browser
 
 <h2 align="center">Live Demo [<a href="https://github.com/TheWisker/Yearly_Planner#index">↑</a>]</h2>
 
