@@ -3,7 +3,7 @@ run-name: Page deployment by ${{ github.actor }}
 on:
   push:
     branches:
-      - main
+      - master
   workflow_dispatch:
 permissions:
   pages: write
@@ -22,7 +22,7 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
         with:
-          ref: 'main'
+          ref: 'master'
           submodules: 'recursive'
       - name: Rename to index.html
         run: mv calendar.html index.html
