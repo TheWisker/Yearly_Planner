@@ -1,0 +1,963 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <link rel="icon" type="image/x-icon" href="./assets/icon.png">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yearly Range Planner</title>
+    <meta name="author" content="TheWisker">
+    <style>
+        :root {
+            --bg-color: #0b1120;
+            --surface: #1e293b;
+            --surface-hover: #334155;
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --measure: #fbbf24;
+            --measure-bg: rgba(251, 191, 36, 0.15);
+        }
+
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            user-select: none;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .title-group {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .header h1 { margin: 0; font-size: 24px; letter-spacing: -0.5px; }
+
+        .copy-badge {
+            background: rgba(59, 130, 246, 0.15);
+            color: #60a5fa;
+            border: 1px solid #3b82f6;
+            padding: 4px 10px;
+            border-radius: 6px;
+            font-size: 12px;
+            font-weight: 700;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .copy-badge:hover {
+            background: rgba(59, 130, 246, 0.3);
+            color: #93c5fd;
+            border-color: #60a5fa;
+            transform: scale(1.05);
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .year-selector {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--surface);
+            padding: 4px 8px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+        }
+
+        .year-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 16px;
+            padding: 4px 8px;
+            border-radius: 4px;
+        }
+
+        .year-btn:hover { color: var(--text-main); background: var(--surface-hover); }
+
+        .toolbar-container {
+            background: var(--surface);
+            padding: 15px 20px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            margin-bottom: 20px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.3);
+        }
+
+        .toolbar {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .ranges-container {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .tool {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            cursor: pointer;
+            padding: 6px 10px;
+            border-radius: 6px;
+            border: 2px solid transparent;
+            background: var(--bg-color);
+            transition: all 0.2s;
+        }
+
+        .tool.active { border-color: var(--text-muted); background: var(--surface-hover); }
+        .tool.hidden-range { opacity: 0.5; border-style: dashed; }
+
+        .color-picker {
+            width: 18px;
+            height: 18px;
+            padding: 0;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            background: transparent;
+        }
+        .color-picker::-webkit-color-swatch { border: none; border-radius: 4px; }
+        .color-picker::-webkit-color-swatch-wrapper { padding: 0; }
+
+        .tool input[type="text"] {
+            border: none;
+            background: transparent;
+            font-weight: 500;
+            width: 80px;
+            outline: none;
+            color: var(--text-main);
+            font-family: inherit;
+        }
+        .tool input[type="text"]:focus { border-bottom: 1px solid var(--text-muted); }
+
+        .stat-badge {
+            font-size: 11px;
+            background: var(--bg-color);
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+
+        .icon-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            cursor: pointer;
+            font-size: 14px;
+            line-height: 1;
+            padding: 0 4px;
+            transition: color 0.2s;
+        }
+        .icon-btn:hover { color: var(--text-main); }
+        .icon-btn.delete:hover { color: #ef4444; }
+
+        .btn {
+            padding: 6px 12px;
+            background: var(--surface-hover);
+            color: var(--text-main);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 500;
+            font-size: 13px;
+        }
+        .btn:hover { background: #475569; }
+        .btn-header { padding: 8px 12px; }
+        .btn-app-export { background: #1e1b4b; border-color: #4f46e5; color: #c7d2fe; }
+        .btn-app-export:hover { background: #312e81; }
+
+        .mode-toggle {
+            display: flex;
+            background: var(--bg-color);
+            padding: 4px;
+            border-radius: 8px;
+            gap: 4px;
+            border: 1px solid var(--border);
+        }
+        .mode-btn {
+            padding: 4px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            color: var(--text-muted);
+        }
+        .mode-btn.active { background: var(--surface-hover); color: var(--text-main); }
+
+        .divider { width: 1px; height: 30px; background: var(--border); margin: 0 5px; }
+
+        .measure-result {
+            font-size: 14px;
+            font-weight: 500;
+            color: #fcd34d;
+            margin-left: auto;
+            background: var(--measure-bg);
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: 1px solid rgba(251, 191, 36, 0.3);
+            display: none;
+        }
+
+        .year-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .month {
+            background: var(--surface);
+            padding: 15px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+
+        .month-title {
+            text-align: center;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--text-main);
+            letter-spacing: 0.5px;
+        }
+
+        .days-header, .days-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+            text-align: center;
+        }
+
+        .days-header {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .day {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 14px;
+            border-radius: 6px;
+            cursor: pointer;
+            border: 1px solid transparent;
+            background: var(--bg-color);
+            transition: transform 0.1s, border-color 0.1s;
+            position: relative;
+        }
+
+        .day:hover { border-color: var(--text-muted); transform: scale(1.05); z-index: 10; }
+        .day.empty { visibility: hidden; }
+
+        .day.has-ranges {
+            color: #ffffff;
+            font-weight: 700;
+            text-shadow:
+                -1px -1px 0 #000,
+                 1px -1px 0 #000,
+                -1px  1px 0 #000,
+                 1px  1px 0 #000,
+                 0px  2px 4px rgba(0,0,0,0.8);
+        }
+
+        .measure-point { box-shadow: 0 0 0 3px var(--measure); z-index: 5; }
+        .measure-path::after {
+            content: '';
+            position: absolute;
+            bottom: 4px;
+            left: 15%;
+            width: 70%;
+            height: 4px;
+            background-color: var(--measure);
+            border-radius: 2px;
+            z-index: 20;
+            pointer-events: none;
+        }
+    </style>
+    <script id="preloaded-data" type="application/json"></script>
+</head>
+<body>
+    <div class="header">
+        <div class="title-group">
+            <h1>Yearly Range Planner</h1>
+            <div id="copy-badge" class="copy-badge" style="display: none;" onclick="restoreOriginalData()" title="Click to restore original preloaded data">
+                📦 Copy #<span id="copy-hash"></span>
+            </div>
+        </div>
+        <div class="header-controls">
+            <button class="btn btn-header btn-app-export" id="btn-export-app">💾</button>
+            <div style="width: 1px; height: 20px; background: var(--border);"></div>
+            <button class="btn btn-header" id="btn-export-template">⬇ Export</button>
+            <button class="btn btn-header" id="btn-import-template">⬆ Import</button>
+            <input type="file" id="file-import" style="display: none" accept=".json">
+
+            <div class="year-selector">
+                <button class="year-btn" id="btn-prev-year">◀</button>
+                <div style="font-weight: bold; font-size: 18px; width: 50px; text-align: center;" id="current-year-display"></div>
+                <button class="year-btn" id="btn-next-year">▶</button>
+            </div>
+        </div>
+    </div>
+    <div class="toolbar-container">
+        <div class="toolbar">
+            <div class="ranges-container" id="ranges-container"></div>
+            <button class="btn" id="add-range-btn">+ Add Range</button>
+            <div class="divider"></div>
+
+            <div class="mode-toggle">
+                <div class="mode-btn active" id="mode-draw">✏️</div>
+                <div class="mode-btn" id="mode-erase">🧽</div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="tool" id="tool-measure">
+                <div style="width: 16px; height: 16px; border-radius: 4px; background: var(--measure);"></div>
+                <span style="font-weight: 500;">Measure</span>
+            </div>
+
+            <div id="measure-result" class="measure-result">Select start date...</div>
+            <button class="btn" id="btn-clear-all" style="margin-left: auto; border-color: #ef4444; color: #ef4444;">Wipe Year</button>
+        </div>
+    </div>
+
+    <div class="year-grid" id="year-grid"></div>
+
+    <div style="text-align: center; margin-top: 40px;">
+        <span style="color: #94a3b8">2026 TheWisker</span>
+    </div>
+
+    <script>
+        const yearGrid = document.getElementById('year-grid')
+        let currentYear = new Date().getFullYear()
+
+        let appHash = ''
+        const hashEl = document.getElementById('copy-hash')
+        if (hashEl && hashEl.textContent.trim() !== '') {
+            appHash = hashEl.textContent.trim()
+            document.getElementById('copy-badge').style.display = 'inline-block'
+        }
+
+        const storagePrefix = appHash ? `app_${appHash}_` : 'app_main_'
+
+        let ranges = []
+        let savedData = {}
+        const localRanges = localStorage.getItem(storagePrefix + 'plannerRanges')
+        const preloadedScript = document.getElementById('preloaded-data').textContent
+        let preloadedJSON = null
+
+        if (preloadedScript) {
+            try { preloadedJSON = JSON.parse(preloadedScript) } catch (e) {}
+        }
+
+        if (localRanges) {
+            ranges = JSON.parse(localRanges)
+        } else if (preloadedJSON) {
+            ranges = preloadedJSON.ranges
+            if (preloadedJSON.years) {
+                Object.keys(preloadedJSON.years).forEach(yrKey => {
+                    localStorage.setItem(storagePrefix + yrKey, JSON.stringify(preloadedJSON.years[yrKey]))
+                })
+            }
+            localStorage.setItem(storagePrefix + 'plannerRanges', JSON.stringify(ranges))
+        } else {
+            ranges = [
+                { id: 'r1', name: 'Project A', color: '#3b82f6', visible: true },
+                { id: 'r2', name: 'Vacation', color: '#22c55e', visible: true }
+            ]
+        }
+
+        let rangeCounter = 1
+        ranges.forEach(r => {
+            const num = parseInt(r.id.replace('r', ''))
+            if (num >= rangeCounter) rangeCounter = num + 1
+        })
+
+        const maxRanges = 8
+        let activeTool = ranges.length > 0 ? ranges[0].id : null
+        let drawMode = 'draw'
+        let isPainting = false
+        let currentDrawAction = 'add'
+        let allDays = []
+        let lastClickedIndex = null
+        let measureState = 0
+        let measureStartDate = null
+        let measureStartDiv = null
+
+        /**
+         * Parses local storage data for the currently active year
+         * Operates in constant time regarding state complexity
+         */
+        function loadYearData () {
+            const savedDataStr = localStorage.getItem(storagePrefix + 'plannerData_' + currentYear)
+            savedData = savedDataStr ? JSON.parse(savedDataStr) : {}
+        }
+
+        /**
+         * Serializes the current active state to standard Web Storage API
+         */
+        function saveData () {
+            localStorage.setItem(storagePrefix + 'plannerRanges', JSON.stringify(ranges))
+            const dayData = {}
+            allDays.forEach(day => {
+                const activeRanges = getDayRanges(day)
+                if (activeRanges.length > 0) {
+                    dayData[day.dataset.date] = activeRanges
+                }
+            })
+            localStorage.setItem(storagePrefix + 'plannerData_' + currentYear, JSON.stringify(dayData))
+        }
+
+        function restoreOriginalData () {
+            if (!preloadedJSON) return
+            if (window.confirm('Restore the original preloaded data for this copy?\n\nWARNING: This will permanently overwrite any changes you have made to this specific copy')) {
+                ranges = preloadedJSON.ranges
+                if (preloadedJSON.years) {
+                    Object.keys(preloadedJSON.years).forEach(yrKey => {
+                        localStorage.setItem(storagePrefix + yrKey, JSON.stringify(preloadedJSON.years[yrKey]))
+                    })
+                }
+                localStorage.setItem(storagePrefix + 'plannerRanges', JSON.stringify(ranges))
+                rangeCounter = 1
+                ranges.forEach(r => {
+                    const num = parseInt(r.id.replace('r', ''))
+                    if (num >= rangeCounter) rangeCounter = num + 1
+                })
+                activeTool = ranges.length > 0 ? ranges[0].id : null
+                initBoardForYear()
+                renderToolbar()
+            }
+        }
+
+        /**
+         * Clones the current DOM constructs a data payload and triggers a download
+         * Modifies the clone inline to inject state preventing dependencies
+         */
+        function exportAppHTML () {
+            const exportAll = window.confirm(`Export ALL years containing data?\n\nClick OK to bundle ALL years\nClick Cancel to bundle ONLY the current year (${currentYear})`)
+            const exportData = { ranges, years: {} }
+
+            for (let i = 0; i < localStorage.length; i++) {
+                const key = localStorage.key(i)
+                if (key.startsWith(storagePrefix + 'plannerData_')) {
+                    const cleanKey = key.replace(storagePrefix, '')
+                    const yearStr = cleanKey.replace('plannerData_', '')
+                    if (exportAll || yearStr === currentYear.toString()) {
+                        exportData.years[cleanKey] = JSON.parse(localStorage.getItem(key))
+                    }
+                }
+            }
+
+            const dataString = JSON.stringify(exportData)
+            let hashNum = 0
+            for (let i = 0; i < dataString.length; i++) {
+                hashNum = Math.imul(31, hashNum) + dataString.charCodeAt(i) | 0
+            }
+            const shortHash = Math.abs(hashNum).toString(16).substring(0, 6).padStart(6, '0')
+
+            const htmlDoc = document.documentElement.cloneNode(true)
+            htmlDoc.querySelector('#year-grid').innerHTML = ''
+            htmlDoc.querySelector('#ranges-container').innerHTML = ''
+            htmlDoc.querySelector('#preloaded-data').textContent = dataString
+            htmlDoc.querySelector('#copy-badge').style.display = 'inline-block'
+            htmlDoc.querySelector('#copy-hash').textContent = shortHash
+
+            const finalHTML = '<!DOCTYPE html>\n<html>\n' + htmlDoc.innerHTML + '\n</html>'
+            const blob = new Blob([finalHTML], { type: 'text/html' })
+            const link = document.createElement('a')
+            link.href = URL.createObjectURL(blob)
+            link.download = `Planner_App_v${shortHash}.html`
+            link.click()
+        }
+
+        function exportTemplate () {
+            const yearAgnosticDays = {}
+            allDays.forEach(day => {
+                const activeRanges = getDayRanges(day)
+                if (activeRanges.length > 0) {
+                    const mmdd = day.dataset.date.substring(5)
+                    yearAgnosticDays[mmdd] = activeRanges
+                }
+            })
+            const exportObj = { formatVersion: 1, ranges, days: yearAgnosticDays }
+            const dataStr = 'data:text/json;charset=utf-8,' + encodeURIComponent(JSON.stringify(exportObj))
+            const downloadAnchorNode = document.createElement('a')
+            downloadAnchorNode.setAttribute('href', dataStr)
+            downloadAnchorNode.setAttribute('download', 'Planner_Template.json')
+            document.body.appendChild(downloadAnchorNode)
+            downloadAnchorNode.click()
+            downloadAnchorNode.remove()
+        }
+
+        function importTemplate (event) {
+            const file = event.target.files[0]
+            if (!file) return
+
+            const reader = new FileReader()
+            reader.onload = function (e) {
+                try {
+                    const imported = JSON.parse(e.target.result)
+                    if (imported.ranges && imported.days) {
+                        ranges = imported.ranges
+                        const newSavedData = {}
+                        for (const [mmdd, activeRanges] of Object.entries(imported.days)) {
+                            let targetDateStr = `${currentYear}-${mmdd}`
+                            if (mmdd === '02-29') {
+                                const isLeap = new Date(currentYear, 1, 29).getMonth() === 1
+                                if (!isLeap) targetDateStr = `${currentYear}-02-28`
+                            }
+                            newSavedData[targetDateStr] = activeRanges
+                        }
+                        savedData = newSavedData
+                        rangeCounter = 1
+                        ranges.forEach(r => {
+                            const num = parseInt(r.id.replace('r', ''))
+                            if (num >= rangeCounter) rangeCounter = num + 1
+                        })
+                        activeTool = ranges.length > 0 ? ranges[0].id : null
+
+                        localStorage.setItem(storagePrefix + 'plannerData_' + currentYear, JSON.stringify(savedData))
+                        localStorage.setItem(storagePrefix + 'plannerRanges', JSON.stringify(ranges))
+
+                        renderToolbar()
+                        initBoardForYear()
+                    } else {
+                        window.alert('Invalid planner file format')
+                    }
+                } catch (err) {
+                    window.alert('Error reading file')
+                }
+                event.target.value = ''
+            }
+            reader.readAsText(file)
+        }
+
+        function changeYear (delta) {
+            currentYear += delta
+            initBoardForYear()
+        }
+
+        /**
+         * Resets and re-renders the primary interface avoiding cumulative state issues
+         */
+        function initBoardForYear () {
+            document.getElementById('current-year-display').innerText = currentYear
+            loadYearData()
+            yearGrid.innerHTML = ''
+            allDays = []
+            clearMeasureVisuals()
+            measureState = 0
+            if (activeTool === 'measure') document.getElementById('measure-result').innerHTML = 'Select start date...'
+            initCalendar()
+            updateStats()
+        }
+
+        /**
+         * Rebuilds the toolbar using strictly DOM manipulation methods rather than innerHTML
+         * This protects against Cross-Site Scripting when rendering user-defined range names
+         */
+        function renderToolbar () {
+            const container = document.getElementById('ranges-container')
+            container.innerHTML = ''
+
+            ranges.forEach(r => {
+                const div = document.createElement('div')
+                div.className = `tool ${activeTool === r.id ? 'active' : ''} ${r.visible === false ? 'hidden-range' : ''}`
+                div.id = `tool-${r.id}`
+                div.onclick = (e) => {
+                    if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'BUTTON') setTool(r.id)
+                }
+
+                const colorInput = document.createElement('input')
+                colorInput.type = 'color'
+                colorInput.value = r.color
+                colorInput.className = 'color-picker'
+                colorInput.onchange = (e) => updateRange(r.id, 'color', e.target.value)
+
+                const nameInput = document.createElement('input')
+                nameInput.type = 'text'
+                nameInput.value = r.name
+                nameInput.onchange = (e) => updateRange(r.id, 'name', e.target.value)
+
+                const statSpan = document.createElement('span')
+                statSpan.className = 'stat-badge'
+                statSpan.id = `stat-${r.id}`
+                statSpan.textContent = '0d'
+
+                const toggleBtn = document.createElement('button')
+                toggleBtn.className = 'icon-btn'
+                toggleBtn.textContent = r.visible === false ? '🙈' : '👁️'
+                toggleBtn.title = 'Toggle Visibility'
+                toggleBtn.onclick = (e) => toggleVisibility(r.id, e)
+
+                const delBtn = document.createElement('button')
+                delBtn.className = 'icon-btn delete'
+                delBtn.textContent = '✖'
+                delBtn.title = 'Delete Range'
+                delBtn.onclick = (e) => removeRange(r.id, e)
+
+                div.append(colorInput, nameInput, statSpan, toggleBtn, delBtn)
+                container.appendChild(div)
+            })
+
+            document.getElementById('add-range-btn').style.display = ranges.length >= maxRanges ? 'none' : 'block'
+            document.getElementById('tool-measure').classList.toggle('active', activeTool === 'measure')
+            document.getElementById('measure-result').style.display = activeTool === 'measure' ? 'block' : 'none'
+            document.getElementById('mode-draw').classList.toggle('active', drawMode === 'draw')
+            document.getElementById('mode-erase').classList.toggle('active', drawMode === 'erase')
+            updateStats()
+        }
+
+        function setTool (toolId) {
+            activeTool = toolId
+            if (activeTool !== 'measure') {
+                measureState = 0
+                clearMeasureVisuals()
+            } else {
+                document.getElementById('measure-result').innerHTML = 'Select start date...'
+            }
+            renderToolbar()
+        }
+
+        function setDrawMode (mode) {
+            drawMode = mode
+            if (activeTool === 'measure' && ranges.length > 0) setTool(ranges[0].id)
+            renderToolbar()
+        }
+
+        function toggleVisibility (id, event) {
+            event.stopPropagation()
+            const range = ranges.find(r => r.id === id)
+            if (range) {
+                range.visible = range.visible === false
+                saveData()
+                renderToolbar()
+                allDays.forEach(day => renderDayVisual(day))
+            }
+        }
+
+        function addRange () {
+            if (ranges.length >= maxRanges) return
+            const newId = 'r' + (rangeCounter++)
+            const colors = ['#a855f7', '#f97316', '#ec4899', '#14b8a6', '#eab308', '#64748b']
+            ranges.push({ id: newId, name: 'New Range', color: colors[ranges.length % colors.length], visible: true })
+            setTool(newId)
+            saveData()
+        }
+
+        function removeRange (id, event) {
+            event.stopPropagation()
+            ranges = ranges.filter(r => r.id !== id)
+            allDays.forEach(day => {
+                const dayRanges = getDayRanges(day)
+                if (dayRanges.includes(id)) setDayRanges(day, dayRanges.filter(r => r !== id))
+            })
+            if (activeTool === id) setTool(ranges.length > 0 ? ranges[0].id : null)
+            else renderToolbar()
+            saveData()
+        }
+
+        function updateRange (id, prop, value) {
+            const range = ranges.find(r => r.id === id)
+            if (range) {
+                range[prop] = value
+                if (prop === 'color') {
+                    allDays.forEach(day => {
+                        if (getDayRanges(day).includes(id)) renderDayVisual(day)
+                    })
+                }
+                saveData()
+            }
+        }
+
+        function initCalendar () {
+            const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December']
+            const dayNames = ['S', 'M', 'T', 'W', 'T', 'F', 'S']
+            let globalDayIndex = 0
+
+            for (let month = 0; month < 12; month++) {
+                const monthDiv = document.createElement('div')
+                monthDiv.className = 'month'
+
+                const titleDiv = document.createElement('div')
+                titleDiv.className = 'month-title'
+                titleDiv.textContent = months[month]
+                monthDiv.appendChild(titleDiv)
+
+                const headerDiv = document.createElement('div')
+                headerDiv.className = 'days-header'
+                dayNames.forEach(d => {
+                    const dEl = document.createElement('div')
+                    dEl.textContent = d
+                    headerDiv.appendChild(dEl)
+                })
+                monthDiv.appendChild(headerDiv)
+
+                const gridDiv = document.createElement('div')
+                gridDiv.className = 'days-grid'
+
+                const daysInMonth = new Date(currentYear, month + 1, 0).getDate()
+                const firstDay = new Date(currentYear, month, 1).getDay()
+
+                for (let i = 0; i < firstDay; i++) {
+                    const emptyDiv = document.createElement('div')
+                    emptyDiv.className = 'day empty'
+                    gridDiv.appendChild(emptyDiv)
+                }
+
+                for (let day = 1; day <= daysInMonth; day++) {
+                    const dayDiv = document.createElement('div')
+                    dayDiv.className = 'day'
+                    dayDiv.innerText = day
+
+                    const dateStr = `${currentYear}-${String(month + 1).padStart(2, '0')}-${String(day).padStart(2, '0')}`
+                    dayDiv.dataset.date = dateStr
+                    dayDiv.dataset.index = globalDayIndex++
+
+                    if (savedData[dateStr]) dayDiv.dataset.ranges = JSON.stringify(savedData[dateStr])
+                    else dayDiv.dataset.ranges = '[]'
+
+                    dayDiv.addEventListener('mousedown', (e) => handleDayInteraction(e, dayDiv, true))
+                    dayDiv.addEventListener('mouseenter', (e) => handleDayInteraction(e, dayDiv, false))
+
+                    gridDiv.appendChild(dayDiv)
+                    allDays.push(dayDiv)
+                    renderDayVisual(dayDiv)
+                }
+                monthDiv.appendChild(gridDiv)
+                yearGrid.appendChild(monthDiv)
+            }
+        }
+
+        function getDayRanges (dayEl) {
+            return JSON.parse(dayEl.dataset.ranges)
+        }
+
+        function setDayRanges (dayEl, arr) {
+            dayEl.dataset.ranges = JSON.stringify(arr)
+            renderDayVisual(dayEl)
+        }
+
+        function renderDayVisual (dayEl) {
+            let activeIDs = getDayRanges(dayEl)
+            activeIDs = activeIDs.filter(id => {
+                const r = ranges.find(range => range.id === id)
+                return r && r.visible !== false
+            })
+
+            if (activeIDs.length === 0) {
+                dayEl.style.background = ''
+                dayEl.classList.remove('has-ranges')
+                return
+            }
+
+            dayEl.classList.add('has-ranges')
+            const activeColors = activeIDs.map(id => ranges.find(r => r.id === id).color)
+
+            if (activeColors.length === 1) {
+                dayEl.style.background = activeColors[0]
+            } else {
+                const gradientStops = []
+                const step = 100 / activeColors.length
+                activeColors.forEach((color, i) => {
+                    gradientStops.push(`${color} ${i * step}%`)
+                    gradientStops.push(`${color} ${(i + 1) * step}%`)
+                })
+                dayEl.style.background = `linear-gradient(135deg, ${gradientStops.join(', ')})`
+            }
+        }
+
+        function clearMeasureVisuals () {
+            document.querySelectorAll('.measure-point, .measure-path').forEach(el => {
+                el.classList.remove('measure-point', 'measure-path')
+            })
+        }
+
+        function handleDayInteraction (e, dayDiv, isClick) {
+            if (activeTool === 'measure') {
+                if (isClick) handleMeasureClick(dayDiv)
+                return
+            }
+            if (!activeTool) return
+
+            if (isClick && drawMode === 'draw') {
+                const activeRangeObj = ranges.find(r => r.id === activeTool)
+                if (activeRangeObj && activeRangeObj.visible === false) {
+                    activeRangeObj.visible = true
+                    renderToolbar()
+                    allDays.forEach(day => renderDayVisual(day))
+                }
+            }
+
+            const currentIndex = parseInt(dayDiv.dataset.index)
+
+            if (isClick && e.shiftKey && lastClickedIndex !== null) {
+                const start = Math.min(lastClickedIndex, currentIndex)
+                const end = Math.max(lastClickedIndex, currentIndex)
+                const action = drawMode === 'erase' ? 'remove' : 'add'
+                let didChange = false
+
+                for (let i = start; i <= end; i++) {
+                    applyToolToDay(allDays[i], activeTool, action)
+                    didChange = true
+                }
+                updateStats()
+                if (didChange) saveData()
+                return
+            }
+
+            if (isClick) {
+                isPainting = true
+                lastClickedIndex = currentIndex
+
+                if (drawMode === 'erase') {
+                    currentDrawAction = 'remove'
+                } else {
+                    const currentRanges = getDayRanges(dayDiv)
+                    currentDrawAction = currentRanges.includes(activeTool) ? 'remove' : 'add'
+                }
+            }
+
+            if (isPainting) {
+                applyToolToDay(dayDiv, activeTool, currentDrawAction)
+                updateStats()
+            }
+        }
+
+        function applyToolToDay (dayDiv, toolId, action) {
+            let currentRanges = getDayRanges(dayDiv)
+            if (action === 'add' && !currentRanges.includes(toolId)) currentRanges.push(toolId)
+            else if (action === 'remove') currentRanges = currentRanges.filter(id => id !== toolId)
+            setDayRanges(dayDiv, currentRanges)
+        }
+
+        function handleMeasureClick (dayDiv) {
+            const clickedDate = new Date(dayDiv.dataset.date)
+            const resDiv = document.getElementById('measure-result')
+
+            if (measureState === 0) {
+                clearMeasureVisuals()
+                measureStartDate = clickedDate
+                measureState = 1
+                measureStartDiv = dayDiv
+                dayDiv.classList.add('measure-point')
+                resDiv.innerHTML = 'Select end date...'
+            } else {
+                const start = measureStartDate < clickedDate ? measureStartDate : clickedDate
+                const end = measureStartDate < clickedDate ? clickedDate : measureStartDate
+
+                allDays.forEach(day => {
+                    const dDate = new Date(day.dataset.date)
+                    if (dDate >= start && dDate <= end) day.classList.add('measure-path')
+                })
+
+                measureStartDiv.classList.add('measure-point')
+                dayDiv.classList.add('measure-point')
+
+                const diffTime = Math.abs(end - start)
+                const diffDays = Math.round(diffTime / (1000 * 60 * 60 * 24)) + 1
+
+                let months = 0
+                const tempDate = new Date(start)
+
+                while (true) {
+                    tempDate.setMonth(tempDate.getMonth() + 1)
+                    if (tempDate > end) {
+                        tempDate.setMonth(tempDate.getMonth() - 1)
+                        break
+                    }
+                    months++
+                }
+
+                const remainingDays = Math.round((end - tempDate) / (1000 * 60 * 60 * 24)) + 1
+
+                resDiv.innerHTML = ''
+                const boldSpan = document.createElement('span')
+                boldSpan.style.color = '#fff'
+                boldSpan.style.fontWeight = 'bold'
+                boldSpan.textContent = `${diffDays} Total Days`
+
+                const textNode = document.createTextNode(` \u00A0|\u00A0 ${months} months, ${remainingDays} days`)
+                resDiv.appendChild(boldSpan)
+                resDiv.appendChild(textNode)
+
+                measureState = 0
+            }
+        }
+
+        function updateStats () {
+            const counts = {}
+            ranges.forEach(r => { counts[r.id] = 0 })
+
+            allDays.forEach(day => {
+                const dayRanges = getDayRanges(day)
+                dayRanges.forEach(id => { if (counts[id] !== undefined) counts[id]++ })
+            })
+
+            ranges.forEach(r => {
+                const statBadge = document.getElementById(`stat-${r.id}`)
+                if (statBadge) statBadge.innerText = counts[r.id] + 'd'
+            })
+        }
+
+        function clearAll () {
+            if (window.confirm(`Wipe the entire board for ${currentYear}?`)) {
+                allDays.forEach(day => setDayRanges(day, []))
+                clearMeasureVisuals()
+                if (activeTool === 'measure') measureState = 0
+                updateStats()
+                saveData()
+            }
+        }
+
+        document.getElementById('btn-export-app').addEventListener('click', exportAppHTML)
+        document.getElementById('btn-export-template').addEventListener('click', exportTemplate)
+        document.getElementById('btn-import-template').addEventListener('click', () => document.getElementById('file-import').click())
+        document.getElementById('file-import').addEventListener('change', importTemplate)
+        document.getElementById('btn-prev-year').addEventListener('click', () => changeYear(-1))
+        document.getElementById('btn-next-year').addEventListener('click', () => changeYear(1))
+        document.getElementById('add-range-btn').addEventListener('click', addRange)
+        document.getElementById('mode-draw').addEventListener('click', () => setDrawMode('draw'))
+        document.getElementById('mode-erase').addEventListener('click', () => setDrawMode('erase'))
+        document.getElementById('tool-measure').addEventListener('click', () => setTool('measure'))
+        document.getElementById('btn-clear-all').addEventListener('click', clearAll)
+
+        document.addEventListener('mouseup', () => {
+            if (isPainting) {
+                isPainting = false
+                saveData()
+            }
+        })
+
+        document.addEventListener('dragstart', (e) => e.preventDefault())
+
+        renderToolbar()
+        initBoardForYear()
+    </script>
+</body>
+</html>
